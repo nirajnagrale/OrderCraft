@@ -12,9 +12,10 @@ type VectorClock struct {
 	clock map[string]int
 	id    string
 }
+
 type VcSnap struct {
-	clock map[string]int
-	id    string
+	Clock map[string]int
+	Id    string
 }
 
 // NewVectorClock initializes a new vector clock with the given size.
@@ -27,19 +28,34 @@ func NewVectorClock(id string) *VectorClock {
 	return vc
 }
 
-//event on every vectorClock
-func (vc *VectorClock) Tick() (VcSnap, error) {
+// GetSnapshot returns a snapshot of the current vector clock.
+func (vc *VectorClock) GetSnapshot() VcSnap {
 	vc.mu.Lock()
 	defer vc.mu.Unlock()
 
-	vc.clock[vc.id]++
-	var vc_snap VcSnap
-	maps.Copy(vc_snap.clock, (vc.clock))
-	vc_snap.id = vc.id
-	return vc_snap, nil
+	snapshot := VcSnap{
+		Clock: make(map[string]int),
+		Id:    vc.id,
+	}
+	maps.Copy(snapshot.Clock, vc.clock)
+	return snapshot
 }
 
-//Add some node to vc
+// event on every vectorClock
+func (vc *VectorClock) Tick() (VcSnap, error) {
+	vc.mu.Lock()
+	defer vc.mu.Unlock()
+	vc.clock[vc.id]++
+
+	snapshot := VcSnap{
+		Clock: make(map[string]int),
+		Id:    vc.id,
+	}
+	maps.Copy(snapshot.Clock, vc.clock)
+	return snapshot, nil
+}
+
+// Add some node to vc
 func (vc *VectorClock) AddNode(id string) {
 	vc.mu.Lock()
 	defer vc.mu.Unlock()
@@ -48,12 +64,13 @@ func (vc *VectorClock) AddNode(id string) {
 		vc.clock[id] = 0
 	}
 }
-//delete some node if exists
+
+// delete some node if exists
 func (vc *VectorClock) DeleteNode(id string) {
 	vc.mu.Lock()
 	defer vc.mu.Unlock()
-	_, exists := vc.clock[id]; if exists {
-		delete(vc.clock,id)
+	_, exists := vc.clock[id]
+	if exists {
+		delete(vc.clock, id)
 	}
 }
-
