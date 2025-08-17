@@ -16,7 +16,7 @@ func NewMessageQueue() *MessageQueue {
 	}
 }
 
-func (mq *MessageQueue) Enqueue(incoming_node QueueItem) {
+func (mq *MessageQueue) Buffer(incoming_node QueueItem) {
 	mq.mu.Lock()
 	defer mq.mu.Unlock()
 	//check the position of the incoming node
@@ -38,7 +38,7 @@ func (mq *MessageQueue) Enqueue(incoming_node QueueItem) {
 	mq.Nodes[senderID] = q
 }
 
-func (mq *MessageQueue) Dequeue(senderID string) (QueueItem, bool) {
+func (mq *MessageQueue) Deliver(senderID string) (QueueItem, bool) {
 	mq.mu.Lock()
 	defer mq.mu.Unlock()
 

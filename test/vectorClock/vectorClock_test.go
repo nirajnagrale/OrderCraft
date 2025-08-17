@@ -1,7 +1,7 @@
 package test
 
 import (
-	"ordercraft/pkg/vectorClock"
+	vectorClock "ordercraft/pkg/VectorClock"
 	"testing"
 )
 

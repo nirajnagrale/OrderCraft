@@ -1,8 +1,8 @@
-package test
+package messageQueue_test
 
 import (
-	"ordercraft/pkg/messageQueue"
-	"ordercraft/pkg/vectorClock"
+	messageQueue "ordercraft/pkg/MessageQueue"
+	vectorClock "ordercraft/pkg/VectorClock"
 	"testing"
 )
 
@@ -21,8 +21,8 @@ func TestMessageQueue(t *testing.T) {
 	node2 := messageQueue.GetQueueItem(&vc2_snapshot, "Message from node2")
 
 	// Enqueue messages
-	mq.Enqueue(node1)
-	mq.Enqueue(node2)
+	mq.Buffer(node1)
+	mq.Buffer(node2)
 	// Check the size of the queue for node1
 	if len(mq.Nodes["node1"]) != 1 {
 		t.Errorf("Expected 1 message in node1's queue, got %d", len(mq.Nodes["node1"]))
@@ -32,11 +32,11 @@ func TestMessageQueue(t *testing.T) {
 		t.Errorf("Expected 1 message in node2's queue, got %d", len(mq.Nodes["node2"]))
 	}
 	// Dequeue messages
-	dequeuedNode1, exists1 := mq.Dequeue("node1")
+	dequeuedNode1, exists1 := mq.Deliver("node1")
 	if !exists1 || dequeuedNode1.Msg != "Message from node1" {
 		t.Errorf("Expected to dequeue 'Message from node1', got %s", dequeuedNode1.Msg)
 	}
-	dequeuedNode2, exists2 := mq.Dequeue("node2")
+	dequeuedNode2, exists2 := mq.Deliver("node2")
 	if !exists2 || dequeuedNode2.Msg != "Message from node2" {
 		t.Errorf("Expected to dequeue 'Message from node2', got %s", dequeuedNode2.Msg)
 	}

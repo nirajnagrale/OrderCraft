@@ -1,6 +1,6 @@
 package messageQueue
 
-import "ordercraft/pkg/vectorClock"
+import vectorClock "ordercraft/pkg/VectorClock"
 
 // MessageQueue represents a message queue for distributed systems.
 type QueueItem struct {
