@@ -1,22 +1,23 @@
-package messageQueue
+package messageBuffer
 
 import (
+	payload "ordercraft/pkg/Payload"
 	"sync"
 )
 
-type MessageQueue struct {
+type Buffer struct {
 	mu    sync.Mutex
 	Nodes map[string]queue // Map of nodes with their vector clocks and messages
 }
 
-// NewMessageQueue creates a new MessageQueue instance.
-func NewMessageQueue() *MessageQueue {
-	return &MessageQueue{
+// NewBuffer creates a new Buffer instance.
+func NewBuffer() *Buffer {
+	return &Buffer{
 		Nodes: make(map[string]queue, 0),
 	}
 }
 
-func (mq *MessageQueue) Buffer(incoming_node QueueItem) {
+func (mq *Buffer) Buffer(incoming_node payload.Payload) {
 	mq.mu.Lock()
 	defer mq.mu.Unlock()
 	//check the position of the incoming node
@@ -32,19 +33,19 @@ func (mq *MessageQueue) Buffer(incoming_node QueueItem) {
 		}
 	}
 	// Insert the incoming node at the correct position
-	q = append(q, QueueItem{})
+	q = append(q, payload.Payload{})
 	copy(q[insertPos+1:], q[insertPos:])
 	q[insertPos] = incoming_node
 	mq.Nodes[senderID] = q
 }
 
-func (mq *MessageQueue) Deliver(senderID string) (QueueItem, bool) {
+func (mq *Buffer) Deliver(senderID string) (payload.Payload, bool) {
 	mq.mu.Lock()
 	defer mq.mu.Unlock()
 
 	q, exists := mq.Nodes[senderID]
 	if !exists || len(q) == 0 {
-		return QueueItem{}, false // No messages to dequeue
+		return payload.Payload{}, false // No messages to dequeue
 	}
 
 	// Dequeue the first message from the queue

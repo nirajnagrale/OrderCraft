@@ -2,7 +2,7 @@ package fifo
 
 import (
 	"fmt"
-	messageQueue "ordercraft/pkg/MessageQueue"
+	messageBuffer "ordercraft/pkg/MessageBuffer"
 	nodesip "ordercraft/pkg/Nodesip"
 	vectorClock "ordercraft/pkg/VectorClock"
 	"sync"
@@ -35,9 +35,9 @@ func CanDeliverMsg(vc1, vc2 *vectorClock.VcSnap) bool {
 	return false
 }
 
-func Run(vc *vectorClock.VectorClock, mq *messageQueue.MessageQueue, nodesIp *nodesip.NodesIp, noOfMessages int, address string) {
+func Run(vc *vectorClock.VectorClock, mq *messageBuffer.Buffer, nodesIp *nodesip.NodesIp, noOfMessages int, address string) {
 	// Implementation of the Run function
-	// This function would typically handle the message queue processing
+	// This function would typically handle the message buffer processing
 	// and the vector clock updates based on the messages received.
 	// receive messages and broadcast 3 random messages
 	fmt.Println("Running FIFO with address:", address)

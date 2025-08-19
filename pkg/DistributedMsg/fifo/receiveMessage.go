@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	messageQueue "ordercraft/pkg/MessageQueue"
+	messageBuffer "ordercraft/pkg/MessageBuffer"
+	payload "ordercraft/pkg/Payload"
 	vectorClock "ordercraft/pkg/VectorClock"
 )
 
-func receiveMessages(vc *vectorClock.VectorClock, mq *messageQueue.MessageQueue, address string) {
+func receiveMessages(vc *vectorClock.VectorClock, mq *messageBuffer.Buffer, address string) {
 	go checkMessagQueue(vc, mq)
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
@@ -24,36 +25,32 @@ func receiveMessages(vc *vectorClock.VectorClock, mq *messageQueue.MessageQueue,
 	}
 }
 
-func handleIncomingMessage(vc *vectorClock.VectorClock, mq *messageQueue.MessageQueue, conn net.Conn) {
+func handleIncomingMessage(vc *vectorClock.VectorClock, mq *messageBuffer.Buffer, conn net.Conn) {
 	defer conn.Close()
-	buffer := make([]byte, 1024) // Adjust buffer size as needed
-	n, err := conn.Read(buffer)
+	data := make([]byte, 1024) // Adjust buffer size as needed
+	n, err := conn.Read(data)
 	if err != nil {
 		return // Handle error appropriately
 	}
 	// Deserialize the message (assuming it's a string for simplicity)
-	message := string(buffer[:n])
-
-	// Create a new vector clock snapshot
-	vcSnapshot := vc.GetSnapshot()
-	b, _ := json.Marshal(vcSnapshot.Clock)
-	fmt.Printf("Received message from ID=%s, VC=%s\n", vcSnapshot.Id, string(b))
-
-	// Create a queue item with the received message and vector clock
-	queueItem := messageQueue.QueueItem{
-		Vc:  &vcSnapshot,
-		Msg: message,
+	var Payload payload.Payload
+	err = json.Unmarshal(data[:n], &Payload)
+	if err != nil {
+		fmt.Println("Error unmarshalling message:", err)
+		return // Handle error appropriately
 	}
 
+	vcSnapshot := vc.GetSnapshot()
+
 	// Buffer the message in the message queue
-	if CanDeliverMsg(&vcSnapshot, queueItem.Vc) {
-		fmt.Println("Message from node", queueItem.Vc.Id, "can be delivered with message:", queueItem.Msg)
+	if CanDeliverMsg(&vcSnapshot, Payload.Vc) {
+		fmt.Println("Message from node", Payload.Vc.Id, "can be delivered with message:", Payload.Msg)
 	} else {
-		mq.Buffer(queueItem)
+		mq.Buffer(Payload)
 	}
 }
 
-func checkMessagQueue(vc *vectorClock.VectorClock, mq *messageQueue.MessageQueue) {
+func checkMessagQueue(vc *vectorClock.VectorClock, mq *messageBuffer.Buffer) {
 	for {
 		for id, queue := range mq.Nodes {
 			if len(queue) > 0 {

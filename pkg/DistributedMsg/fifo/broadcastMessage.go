@@ -1,11 +1,12 @@
 package fifo
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net"
-	messageQueue "ordercraft/pkg/MessageQueue"
 	nodesip "ordercraft/pkg/Nodesip"
+	payload "ordercraft/pkg/Payload"
 	vectorClock "ordercraft/pkg/VectorClock"
 	"sync"
 	"time"
@@ -39,19 +40,24 @@ func broadcastMessages(vc *vectorClock.VectorClock, nodesIp *nodesip.NodesIp,
 			fmt.Println("Error ticking vector clock:", err)
 			continue
 		}
-		queueItem := messageQueue.GetQueueItem(&vcSnapshot, messages[i])	
+		Payload := payload.MakePayload(&vcSnapshot, messages[i])
 		for _, conn := range connections {
-			go handleBroadcast(queueItem,conn)
+			go handleBroadcast(Payload, conn)
 		}
 	}
 }
 
-func handleBroadcast(queueItem messageQueue.QueueItem, conn net.Conn) {
+func handleBroadcast(Payload payload.Payload, conn net.Conn) {
 	time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond) // Simulate network delay
+	data, err := json.Marshal(Payload)
 	defer conn.Close()
 	if err != nil {
 		fmt.Println("Error marshalling queue item:", err)
 		return
 	}
-	_, err = conn.Write([]byte(queueItem))
+	_, err = conn.Write(data)
+	if err != nil {
+		fmt.Println("Error writing to connection:", err)
+		return
+	}
 }

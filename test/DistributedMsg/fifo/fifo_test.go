@@ -2,7 +2,7 @@ package fifo_test
 
 import (
 	"ordercraft/pkg/DistributedMsg/fifo"
-	messageQueue "ordercraft/pkg/MessageQueue"
+	messageBuffer "ordercraft/pkg/MessageBuffer"
 	nodesip "ordercraft/pkg/Nodesip"
 	vectorClock "ordercraft/pkg/VectorClock"
 	"testing"
@@ -18,8 +18,8 @@ func TestFifo(t *testing.T) {
 	nodesIp.AddNode("node2", "localhost:8082")
 	//nodesIp.AddNode("node3", "localhost:8083")
 
-	mq1 := messageQueue.NewMessageQueue()
-	mq2 := messageQueue.NewMessageQueue()
+	mq1 := messageBuffer.NewBuffer()
+	mq2 := messageBuffer.NewBuffer()
 	//mq3 := messageQueue.NewMessageQueue()
 
 	go fifo.Run(vc1, mq1, nodesIp, 1, "localhost:8081")

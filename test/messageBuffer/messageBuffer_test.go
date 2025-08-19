@@ -1,14 +1,15 @@
-package messageQueue_test
+package messageBuffer_test
 
 import (
-	messageQueue "ordercraft/pkg/MessageQueue"
+	messageBuffer "ordercraft/pkg/MessageBuffer"
 	vectorClock "ordercraft/pkg/VectorClock"
+	payload "ordercraft/pkg/Payload"
 	"testing"
 )
 
-func TestMessageQueue(t *testing.T) {
-	// Create a new message queue
-	mq := messageQueue.NewMessageQueue()
+func TestMessageBuffer(t *testing.T) {
+	// Create a new message buffer
+	mq := messageBuffer.NewBuffer()
 	// Create vector clocks for testing
 	vc1 := vectorClock.NewVectorClock("node1")
 	vc2 := vectorClock.NewVectorClock("node2")
@@ -17,12 +18,12 @@ func TestMessageQueue(t *testing.T) {
 	vc1_snapshot := vc1.GetSnapshot()
 	vc2_snapshot := vc2.GetSnapshot()
 
-	node1 := messageQueue.GetQueueItem(&vc1_snapshot, "Message from node1")
-	node2 := messageQueue.GetQueueItem(&vc2_snapshot, "Message from node2")
+	payload1 := payload.MakePayload(&vc1_snapshot, "Message from node1")
+	payload2 := payload.MakePayload(&vc2_snapshot, "Message from node2")
 
 	// Enqueue messages
-	mq.Buffer(node1)
-	mq.Buffer(node2)
+	mq.Buffer(payload1)
+	mq.Buffer(payload2)
 	// Check the size of the queue for node1
 	if len(mq.Nodes["node1"]) != 1 {
 		t.Errorf("Expected 1 message in node1's queue, got %d", len(mq.Nodes["node1"]))
